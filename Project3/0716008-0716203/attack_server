@@ -1,0 +1,31 @@
+#! /usr/bin/python3
+import socket
+import threading
+import sqlite3
+import sys
+import os
+import time
+
+
+HOST = '0.0.0.0'
+PORT = int(sys.argv[1])
+
+
+
+
+
+
+
+
+         
+
+
+
+
+
+            
+           
+            
+        
+
+        

